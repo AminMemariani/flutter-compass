@@ -1,68 +1,116 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  double _direction = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCompass();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    FlutterCompass.events!.listen(null);
+  }
+
+  void _startCompass() {
+    FlutterCompass.events!.listen((double direction) {
+      setState(() {
+        _direction = direction;
+      });
+    } as void Function(CompassEvent event)?);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(),
       body: Center(
-        child: CompassScreen(),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Background with subtle compass rose
+            Transform.rotate(
+              angle: _direction * (3.14159 / 180), // Convert degrees to radians
+              child: Image.asset(
+                'assets/images/rose.png', // Replace with your compass rose image
+                width: 250,
+                height: 250,
+              ),
+            ),
+            // Compass needle
+            Transform.rotate(
+              angle: _direction * (3.14159 / 180),
+              child: Image.asset(
+                'assets/images/compass_needle.png', // Replace with your compass needle image
+                width: 150,
+                height: 150,
+              ),
+            ),
+            // Cardinal directions (N, E, S, W)
+            Positioned(
+              bottom: 20,
+              child: Text(
+                'N',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Positioned(
+              right: 20,
+              child: Text(
+                'E',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 20,
+              child: Text(
+                'S',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            Positioned(
+              left: 20,
+              child: Text(
+                'W',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            // Current direction (optional)
+            Positioned(
+              bottom: 80,
+              child: Text(
+                '${_direction.toStringAsFixed(0)}°',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
-  }
-}
-
-class CompassScreen extends StatelessWidget {
-  static const double _size = 300;
-
-  const CompassScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: _size,
-      height: _size,
-      child: CustomPaint(
-        painter: CompassPainter(),
-      ),
-    );
-  }
-}
-
-class CompassPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paintCircle = Paint()
-      ..color = Colors.blue
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8;
-
-    final Paint paintNeedle = Paint()
-      ..color = Colors.red
-      ..style = PaintingStyle.fill;
-
-    // Draw the compass circle
-    canvas.drawCircle(
-        size.center(Offset.zero), size.width / 2 - 20, paintCircle);
-
-    // Draw the compass needle
-    final double needleLength = size.width / 2 - 40;
-    final double angle = 0; // You can change this to rotate the needle
-    final Offset needleStart = size.center(Offset.zero);
-    final Offset needleEnd = Offset(
-      needleStart.dx + needleLength * math.cos(angle),
-      needleStart.dy + needleLength * math.sin(angle),
-    );
-
-    canvas.drawLine(needleStart, needleEnd, paintNeedle);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
   }
 }
