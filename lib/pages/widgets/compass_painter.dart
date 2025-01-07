@@ -16,6 +16,7 @@ class CompassPainterWidget extends CustomPainter {
 
   late final _majorTicks = _layoutScale(majorTickerCount);
   late final _minorTicks = _layoutScale(minorTickerCount);
+  late final _angleDegree = _layoutAngleScale(_majorTicks);
 
   late final majorScalePaint = Paint()
     ..style = PaintingStyle.stroke
@@ -40,7 +41,7 @@ class CompassPainterWidget extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const origin = Offset.zero;
     final center = size.center(origin);
-    final radius = size.width / 2;
+    final radius = size.width / 2.2;
     final majorTickLength = size.width * 0.08;
     final minorTickLength = size.width * 0.055;
 
@@ -49,22 +50,34 @@ class CompassPainterWidget extends CustomPainter {
     // Create major ticks
     for (final angel in _majorTicks) {
       final tickStart = center +
-          Offset.fromDirection(
-              correctAngel(angel).toRadians(), radius);
+          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
       final tickEnd = center +
           Offset.fromDirection(
-              correctAngel(angel).toRadians(), radius - majorTickLength);
+              _correctAngel(angel).toRadians(), radius - majorTickLength);
       canvas.drawLine(tickStart, tickEnd, majorScalePaint);
     }
 
     // Create minor ticks
     for (final angel in _minorTicks) {
       final tickStart = center +
-          Offset.fromDirection(correctAngel(angel).toRadians(), radius);
+          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
       final tickEnd = center +
           Offset.fromDirection(
-              correctAngel(angel).toRadians(), radius - minorTickLength);
+              _correctAngel(angel).toRadians(), radius - minorTickLength);
       canvas.drawLine(tickStart, tickEnd, minorScalePaint);
+    }
+
+    // Create Angle Degree
+    for (final angel in _angleDegree) {
+      final textPainter =
+          TextSpan(text: angel.toStringAsFixed(0), style: majorScaleStyle)
+              .toPainter()
+            ..layout();
+
+      final layoutOffset =
+          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
+      final offset = center + layoutOffset;
+      textPainter.paint(canvas, offset);
     }
 
     canvas.restore();
@@ -81,11 +94,30 @@ class CompassPainterWidget extends CustomPainter {
     return List.generate(ticks, (index) => index * scale);
   }
 
-  double correctAngel(double angle) => angle - 90;
+  List<double> _layoutAngleScale(List<double> ticks) {
+    List<double> angles = [];
+    for (var i = 0; i < ticks.length; i++) {
+      if (i == ticks.length - 1) {
+        double degree = (ticks[i] + 360) / 2;
+        angles.add(degree);
+      } else {
+        double degree = (ticks[i] + ticks[i + 1]) / 2;
+        angles.add(degree);
+      }
+    }
+    return angles;
+  }
+
+  double _correctAngel(double angle) => angle - 90;
 }
 
 typedef CardinalityMap = Map<num, String>;
 
 extension on num {
   double toRadians() => this * pi / 100;
+}
+
+extension on TextSpan {
+  TextPainter toPainter({TextDirection textDirection = TextDirection.ltr}) =>
+      TextPainter(text: this, textDirection: textDirection);
 }
