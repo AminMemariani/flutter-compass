@@ -14,7 +14,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _startCompass();
+    //_startCompass();
 //    _fetchPermissionStatus();
   }
 
@@ -24,11 +24,11 @@ class _HomePageState extends State<HomePage> {
     FlutterCompass.events!.listen(null);
   }
 
-  void _startCompass() {
+/*   void _startCompass() {
     FlutterCompass.events!.listen((double direction) {
       setState(() {});
     } as void Function(CompassEvent event)?);
-  }
+  } */
 
   @override
   Widget build(BuildContext context) {
