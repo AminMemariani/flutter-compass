@@ -74,10 +74,15 @@ class CompassPainterWidget extends CustomPainter {
               .toPainter()
             ..layout();
 
-      final layoutOffset =
-          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
+      final layoutOffset = Offset.fromDirection(
+          _correctAngel(angel).toRadians(),
+          radius - majorTickLength - size.width * 0.02);
       final offset = center + layoutOffset;
-      textPainter.paint(canvas, offset);
+      canvas.restore();
+      canvas.save();
+      canvas.rotate(angel.toRadians());
+      canvas.translate(offset.dx, offset.dy);
+      textPainter.paint(canvas, Offset(offset.dx, offset.dy));
     }
 
     canvas.restore();
