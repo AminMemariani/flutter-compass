@@ -41,7 +41,7 @@ class CompassPainterWidget extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const origin = Offset.zero;
     final center = size.center(origin);
-    final radius = size.width / 2.2;
+    final radius = size.width / 2;
     final majorTickLength = size.width * 0.08;
     final minorTickLength = size.width * 0.055;
 
@@ -80,10 +80,32 @@ class CompassPainterWidget extends CustomPainter {
       final offset = center + layoutOffset;
       canvas.restore();
       canvas.save();
-      canvas.rotate(angel.toRadians());
       canvas.translate(offset.dx, offset.dy);
-      textPainter.paint(canvas, Offset(offset.dx, offset.dy));
-    }
+      canvas.rotate(angel.toRadians());
+      canvas.translate(-offset.dx, -offset.dy);
+      textPainter.paint(
+          canvas, Offset(offset.dx - (textPainter.width / 2), offset.dy));
+    } // end of for
+
+    // Create cardinality text
+    for (final cardinality in cardinalityMap.entries) {
+      final angel = cardinality.key.toDouble();
+      final text = cardinality.value;
+      final textPainter =
+          TextSpan(text: text, style: cardinalityStyle).toPainter()..layout();
+
+      final layoutOffset = Offset.fromDirection(
+          _correctAngel(angel).toRadians(),
+          radius - (majorTickLength + size.width * 0.01));
+      final offset = center + layoutOffset;
+      canvas.restore();
+      canvas.save();
+      canvas.translate(offset.dx, offset.dy);
+      canvas.rotate(angel.toRadians());
+      canvas.translate(-offset.dx, -offset.dy);
+      textPainter.paint(
+          canvas, Offset(offset.dx - (textPainter.width / 2), offset.dy));
+    } // end of for
 
     canvas.restore();
   }
