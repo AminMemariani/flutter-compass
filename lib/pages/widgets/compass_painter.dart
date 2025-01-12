@@ -57,7 +57,7 @@ class CompassPainterWidget extends CustomPainter {
       canvas.drawLine(tickStart, tickEnd, majorScalePaint);
     }
 
-    // Create minor ticks
+    // Create minor scale
     for (final angel in _minorTicks) {
       final tickStart = center +
           Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
@@ -69,7 +69,7 @@ class CompassPainterWidget extends CustomPainter {
 
     // Create Angle Degree
     for (final angel in _angleDegree) {
-      final textPainter =
+      final TextPainter textPainter =
           TextSpan(text: angel.toStringAsFixed(0), style: majorScaleStyle)
               .toPainter()
             ..layout();
@@ -83,8 +83,7 @@ class CompassPainterWidget extends CustomPainter {
       canvas.translate(offset.dx, offset.dy);
       canvas.rotate(angel.toRadians());
       canvas.translate(-offset.dx, -offset.dy);
-      textPainter.paint(
-          canvas, Offset(offset.dx - (textPainter.width / 2), offset.dy));
+      textPainter.paint(canvas, offset);
     } // end of for
 
     // Create cardinality text
@@ -94,9 +93,8 @@ class CompassPainterWidget extends CustomPainter {
       final textPainter =
           TextSpan(text: text, style: cardinalityStyle).toPainter()..layout();
 
-      final layoutOffset = Offset.fromDirection(
-          _correctAngel(angel).toRadians(),
-          radius - (majorTickLength + size.width * 0.01));
+      final layoutOffset =
+          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
       final offset = center + layoutOffset;
       canvas.restore();
       canvas.save();
@@ -117,13 +115,13 @@ class CompassPainterWidget extends CustomPainter {
   }
 
   List<double> _layoutScale(int ticks) {
-    final scale = 360 / ticks;
+    final double scale = 360 / ticks;
     return List.generate(ticks, (index) => index * scale);
   }
 
   List<double> _layoutAngleScale(List<double> ticks) {
     List<double> angles = [];
-    for (var i = 0; i < ticks.length; i++) {
+    for (int i = 0; i < ticks.length; i++) {
       if (i == ticks.length - 1) {
         double degree = (ticks[i] + 360) / 2;
         angles.add(degree);
