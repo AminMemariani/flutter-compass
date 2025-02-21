@@ -1,16 +1,63 @@
-# compass
+# Flutter Compass App
 
-A new Flutter project.
+A simple and elegant compass application built using Flutter. This app utilizes the device's magnetometer and accelerometer sensors to provide accurate directional readings.
+
+## Features
+- Real-time compass direction updates
+- Smooth UI animations
+- Displays heading in degrees
+- Works without an internet connection
+- Supports both portrait and landscape modes
+
+## Screenshots
+<!-- Add screenshots here -->
 
 ## Getting Started
+### Prerequisites
+Ensure you have Flutter installed. You can download it from the official [Flutter website](https://flutter.dev/).
 
-This project is a starting point for a Flutter application.
+### Installation
+Clone the repository:
+```sh
+git clone https://github.com/yourusername/flutter-compass-app.git
+cd flutter-compass-app
+```
 
-A few resources to get you started if this is your first Flutter project:
+Install dependencies:
+```sh
+flutter pub get
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Run the app:
+```sh
+flutter run
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Dependencies
+This project uses the following Flutter plugins:
+- [flutter_compass](https://pub.dev/packages/flutter_compass)
+- [permission_handler](https://pub.dev/packages/permission_handler)
+
+## Permissions
+For Android, ensure the following permissions are added in `AndroidManifest.xml`:
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+```
+
+For iOS, add the following to `Info.plist`:
+```xml
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>We need access to your location to show the compass direction</string>
+```
+
+## Contribution
+Contributions are welcome! Feel free to submit a pull request.
+
+## License
+This project is licensed under the MIT License. See the `LICENSE` file for details.
+
+## Contact
+For any queries, contact [your email or GitHub profile].
+
