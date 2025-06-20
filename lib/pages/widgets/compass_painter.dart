@@ -1,12 +1,14 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
+
+typedef CardinalityMap = Map<num, String>;
 
 class CompassPainterWidget extends CustomPainter {
   final Color color;
   final int majorTickerCount;
   final int minorTickerCount;
   final CardinalityMap cardinalityMap;
+
   CompassPainterWidget({
     required this.color,
     this.majorTickerCount = 18,
@@ -14,132 +16,113 @@ class CompassPainterWidget extends CustomPainter {
     this.cardinalityMap = const {0: 'N', 90: 'E', 180: 'S', 270: 'W'},
   });
 
-  late final _majorTicks = _layoutScale(majorTickerCount);
-  late final _minorTicks = _layoutScale(minorTickerCount);
-  late final _angleDegree = _layoutAngleScale(_majorTicks);
+  late final List<double> _majorTicks = _layoutScale(majorTickerCount);
+  late final List<double> _minorTicks = _layoutScale(minorTickerCount);
+  late final List<double> _angleDegree = _layoutAngleScale(_majorTicks);
 
-  late final majorScalePaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..color = color
-    ..strokeWidth = 2.0;
+  final double majorTickStrokeWidth = 2.0;
+  final double minorTickStrokeWidth = 1.0;
 
-  late final minorScalePaint = Paint()
-    ..style = PaintingStyle.stroke
-    ..color = color.withAlpha(178)
-    ..strokeWidth = 1.0;
-
-  late final majorScaleStyle = TextStyle(
-    color: color,
-    fontSize: 12,
-  );
-  late final cardinalityStyle = const TextStyle(
-    color: Colors.black,
-    fontWeight: FontWeight.bold,
-    fontSize: 20,
-  );
   @override
   void paint(Canvas canvas, Size size) {
-    const origin = Offset.zero;
-    final center = size.center(origin);
-    final radius = size.width / 2;
-    final majorTickLength = size.width * 0.08;
-    final minorTickLength = size.width * 0.055;
+    final Offset center = size.center(Offset.zero);
+    final double radius = size.shortestSide / 2;
+    final double majorTickLength = radius * 0.12;
+    final double minorTickLength = radius * 0.08;
 
-    canvas.save();
+    final Paint majorPaint = Paint()
+      ..color = color
+      ..strokeWidth = majorTickStrokeWidth
+      ..style = PaintingStyle.stroke;
 
-    // Create major ticks
-    for (final angel in _majorTicks) {
-      final tickStart = center +
-          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
-      final tickEnd = center +
-          Offset.fromDirection(
-              _correctAngel(angel).toRadians(), radius - majorTickLength);
-      canvas.drawLine(tickStart, tickEnd, majorScalePaint);
+    final Paint minorPaint = Paint()
+      ..color = color.withOpacity(0.7)
+      ..strokeWidth = minorTickStrokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final TextStyle degreeStyle = TextStyle(color: color, fontSize: 12);
+
+    final TextStyle cardinalStyle = const TextStyle(
+      color: Colors.black,
+      fontSize: 20,
+      fontWeight: FontWeight.bold,
+    );
+
+    // Draw minor tick marks
+    for (final angle in _minorTicks) {
+      final double rad = _adjustAngle(angle).toRadians();
+      final Offset start = center + Offset.fromDirection(rad, radius);
+      final Offset end =
+          center + Offset.fromDirection(rad, radius - minorTickLength);
+      canvas.drawLine(start, end, minorPaint);
     }
 
-    // Create minor scale
-    for (final angel in _minorTicks) {
-      final tickStart = center +
-          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
-      final tickEnd = center +
-          Offset.fromDirection(
-              _correctAngel(angel).toRadians(), radius - minorTickLength);
-      canvas.drawLine(tickStart, tickEnd, minorScalePaint);
+    // Draw major tick marks
+    for (final angle in _majorTicks) {
+      final double rad = _adjustAngle(angle).toRadians();
+      final Offset start = center + Offset.fromDirection(rad, radius);
+      final Offset end =
+          center + Offset.fromDirection(rad, radius - majorTickLength);
+      canvas.drawLine(start, end, majorPaint);
     }
 
-    // Create Angle Degree
-    for (final angel in _angleDegree) {
-      final TextPainter textPainter =
-          TextSpan(text: angel.toStringAsFixed(0), style: majorScaleStyle)
-              .toPainter()
-            ..layout();
-
-      final layoutOffset = Offset.fromDirection(
-          _correctAngel(angel).toRadians(),
-          radius - majorTickLength - size.width * 0.02);
-      final offset = center + layoutOffset;
-      canvas.restore();
-      canvas.save();
-      canvas.translate(offset.dx, offset.dy);
-      canvas.rotate(angel.toRadians());
-      canvas.translate(-offset.dx, -offset.dy);
-      textPainter.paint(canvas, offset);
-    } // end of for
-
-    // Create cardinality text
-    for (final cardinality in cardinalityMap.entries) {
-      final angel = cardinality.key.toDouble();
-      final text = cardinality.value;
-      final textPainter =
-          TextSpan(text: text, style: cardinalityStyle).toPainter()..layout();
-
-      final layoutOffset =
-          Offset.fromDirection(_correctAngel(angel).toRadians(), radius);
-      final offset = center + layoutOffset;
-      canvas.restore();
-      canvas.save();
-      canvas.translate(offset.dx, offset.dy);
-      canvas.rotate(angel.toRadians());
-      canvas.translate(-offset.dx, -offset.dy);
+    // Draw degree labels
+    for (final angle in _angleDegree) {
+      final double rad = _adjustAngle(angle).toRadians();
+      final Offset position =
+          center + Offset.fromDirection(rad, radius - majorTickLength - 14);
+      final textPainter = TextSpan(
+        text: angle.round().toString(),
+        style: degreeStyle,
+      ).toPainter()..layout();
       textPainter.paint(
-          canvas, Offset(offset.dx - (textPainter.width / 2), offset.dy));
-    } // end of for
+        canvas,
+        position - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    }
 
-    canvas.restore();
+    // Draw cardinal directions (N, E, S, W)
+    for (final entry in cardinalityMap.entries) {
+      final double angle = entry.key.toDouble();
+      final String label = entry.value;
+      final double rad = _adjustAngle(angle).toRadians();
+      final Offset position = center + Offset.fromDirection(rad, radius - 30);
+      final textPainter = TextSpan(
+        text: label,
+        style: cardinalStyle,
+      ).toPainter()..layout();
+      textPainter.paint(
+        canvas,
+        position - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    // TODO: implement shouldRepaint
-    throw UnimplementedError();
-  }
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 
-  List<double> _layoutScale(int ticks) {
-    final double scale = 360 / ticks;
-    return List.generate(ticks, (index) => index * scale);
+  List<double> _layoutScale(int count) {
+    final double interval = 360 / count;
+    return List.generate(count, (index) => index * interval);
   }
 
   List<double> _layoutAngleScale(List<double> ticks) {
-    List<double> angles = [];
+    final List<double> angles = [];
     for (int i = 0; i < ticks.length; i++) {
-      if (i == ticks.length - 1) {
-        double degree = (ticks[i] + 360) / 2;
-        angles.add(degree);
-      } else {
-        double degree = (ticks[i] + ticks[i + 1]) / 2;
-        angles.add(degree);
-      }
+      final double current = ticks[i];
+      final double next = i == ticks.length - 1 ? 360 : ticks[i + 1];
+      angles.add((current + next) / 2);
     }
     return angles;
   }
 
-  double _correctAngel(double angle) => angle - 90;
+  double _adjustAngle(double angle) => angle - 90;
 }
 
-typedef CardinalityMap = Map<num, String>;
+// Extensions
 
 extension on num {
-  double toRadians() => this * pi / 100;
+  double toRadians() => this * pi / 180;
 }
 
 extension on TextSpan {
