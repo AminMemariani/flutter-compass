@@ -19,7 +19,7 @@ class CompassPainterWidget extends CustomPainter {
   late final List<double> _majorTicks = _layoutScale(majorTickerCount);
   late final List<double> _minorTicks = _layoutScale(minorTickerCount);
 
-  static const double padding = 50.0;
+  static const double padding = 40.0;
   final double majorTickStrokeWidth = 2.0;
   final double minorTickStrokeWidth = 1.0;
 
@@ -69,10 +69,11 @@ class CompassPainterWidget extends CustomPainter {
       canvas.drawLine(start, end, majorPaint);
     }
 
-    // Draw degree labels just outside the major ticks
+    // Draw degree labels inside the major ticks
     for (final angle in _majorTicks) {
       final double rad = _adjustAngle(angle).toRadians();
-      final Offset labelPos = center + Offset.fromDirection(rad, radius + 10);
+      final Offset labelPos =
+          center + Offset.fromDirection(rad, radius - majorTickLength - 15);
       final textPainter = TextSpan(
         text: angle.round().toString(),
         style: degreeStyle,
@@ -84,12 +85,13 @@ class CompassPainterWidget extends CustomPainter {
       );
     }
 
-    // Draw cardinal directions further outside the degree labels
+    // Draw cardinal directions inside the degree labels
     for (final entry in cardinalityMap.entries) {
       final double angle = entry.key.toDouble();
       final String label = entry.value;
       final double rad = _adjustAngle(angle).toRadians();
-      final Offset position = center + Offset.fromDirection(rad, radius + 28);
+      final Offset position =
+          center + Offset.fromDirection(rad, radius - majorTickLength - 40);
       final textPainter = TextSpan(
         text: label,
         style: cardinalStyle,
