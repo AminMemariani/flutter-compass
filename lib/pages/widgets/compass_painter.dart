@@ -112,7 +112,7 @@ class CompassPainterWidget extends CustomPainter {
 
     // Draw inner circle for heading
     final innerCirclePaint = Paint()
-      ..color = Colors.grey.shade200
+      ..color = Colors.amber.shade100
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius * 0.3, innerCirclePaint);
 
