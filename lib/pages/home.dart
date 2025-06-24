@@ -11,24 +11,23 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  double? _heading;
+
   @override
   void initState() {
     super.initState();
-    //_startCompass();
-//    _fetchPermissionStatus();
+    FlutterCompass.events?.listen((CompassEvent event) {
+      setState(() {
+        _heading = event.heading;
+      });
+    });
   }
 
   @override
   void dispose() {
-    super.dispose();
     FlutterCompass.events!.listen(null);
+    super.dispose();
   }
-
-/*   void _startCompass() {
-    FlutterCompass.events!.listen((double direction) {
-      setState(() {});
-    } as void Function(CompassEvent event)?);
-  } */
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +37,7 @@ class _HomePageState extends State<HomePage> {
       size: size,
       painter: CompassPainterWidget(
         color: Theme.of(context).colorScheme.primary,
+        heading: _heading,
       ),
     ));
   }

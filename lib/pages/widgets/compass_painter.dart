@@ -8,12 +8,14 @@ class CompassPainterWidget extends CustomPainter {
   final int majorTickerCount;
   final int minorTickerCount;
   final CardinalityMap cardinalityMap;
+  final double? heading;
 
   CompassPainterWidget({
     required this.color,
     this.majorTickerCount = 18,
     this.minorTickerCount = 90,
     this.cardinalityMap = const {0: 'N', 90: 'E', 180: 'S', 270: 'W'},
+    this.heading,
   });
 
   late final List<double> _majorTicks = _layoutScale(majorTickerCount);
@@ -36,7 +38,7 @@ class CompassPainterWidget extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final Paint minorPaint = Paint()
-      ..color = color.withOpacity(0.7)
+      ..color = color.withAlpha((255 * 0.7).round())
       ..strokeWidth = minorTickStrokeWidth
       ..style = PaintingStyle.stroke;
 
@@ -92,9 +94,14 @@ class CompassPainterWidget extends CustomPainter {
       final double rad = _adjustAngle(angle).toRadians();
       final Offset position =
           center + Offset.fromDirection(rad, radius - majorTickLength - 40);
+
+      final style = label == 'N'
+          ? cardinalStyle.copyWith(color: Colors.red)
+          : cardinalStyle;
+
       final textPainter = TextSpan(
         text: label,
-        style: cardinalStyle,
+        style: style,
       ).toPainter()
         ..layout();
       textPainter.paint(
@@ -102,10 +109,37 @@ class CompassPainterWidget extends CustomPainter {
         position - Offset(textPainter.width / 2, textPainter.height / 2),
       );
     }
+
+    // Draw inner circle for heading
+    final innerCirclePaint = Paint()
+      ..color = Colors.grey.shade200
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(center, radius * 0.3, innerCirclePaint);
+
+    // Draw heading text
+    if (heading != null) {
+      final headingStyle = const TextStyle(
+        color: Colors.black,
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+      );
+      final headingText = '${heading!.round()}°';
+      final textPainter = TextSpan(
+        text: headingText,
+        style: headingStyle,
+      ).toPainter()
+        ..layout();
+      textPainter.paint(
+        canvas,
+        center - Offset(textPainter.width / 2, textPainter.height / 2),
+      );
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CompassPainterWidget oldDelegate) {
+    return oldDelegate.heading != heading || oldDelegate.color != color;
+  }
 
   List<double> _layoutScale(int count) {
     final double interval = 360 / count;
