@@ -4,12 +4,12 @@ class Neumorphism extends StatelessWidget {
   const Neumorphism({
     super.key,
     required this.child,
-    required this.distance,
-    required this.blur,
+    this.distance = 30,
+    this.blur = 50,
     this.margin,
     this.padding,
-    required this.isReverse,
-    required this.innerShadow,
+    this.isReverse = false,
+    this.innerShadow = false,
   });
 
   final Widget child;
@@ -22,6 +22,45 @@ class Neumorphism extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Container(
+      margin: margin,
+      padding: padding,
+      decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
+          shape: BoxShape.circle,
+          boxShadow: isReverse
+              ? [
+                  BoxShadow(
+                      color: Theme.of(context).colorScheme.primary,
+                      blurRadius: blur,
+                      offset: Offset(-distance, -distance)),
+                  BoxShadow(
+                      color: Colors.white,
+                      blurRadius: blur,
+                      offset: Offset(distance, distance)),
+                ]
+              : [
+                  BoxShadow(
+                      color: Colors.white,
+                      blurRadius: blur,
+                      offset: Offset(distance, distance)),
+                  BoxShadow(
+                      color: Theme.of(context).colorScheme.primary,
+                      blurRadius: blur,
+                      offset: Offset(-distance, -distance)),
+                ]),
+      child: innerShadow
+          ? Container(
+              decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                    Theme.of(context).colorScheme.primary,
+                    Colors.white
+                  ])),
+            )
+          : child,
+    );
   }
 }
