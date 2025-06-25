@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 
 typedef CardinalityMap = Map<num, String>;
 
-class CompassPainterWidget extends CustomPainter {
+class CompassViewPainter extends CustomPainter {
   final Color color;
   final int majorTickerCount;
   final int minorTickerCount;
   final CardinalityMap cardinalityMap;
   final double? heading;
 
-  CompassPainterWidget({
+  CompassViewPainter({
     required this.color,
     this.majorTickerCount = 18,
     this.minorTickerCount = 90,
@@ -137,7 +137,7 @@ class CompassPainterWidget extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CompassPainterWidget oldDelegate) {
+  bool shouldRepaint(covariant CompassViewPainter oldDelegate) {
     return oldDelegate.heading != heading || oldDelegate.color != color;
   }
 

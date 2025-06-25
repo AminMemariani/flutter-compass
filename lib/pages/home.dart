@@ -1,3 +1,4 @@
+import 'package:compass/pages/widgets/neumorphism.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 
@@ -33,11 +34,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-        body: CustomPaint(
-      size: size,
-      painter: CompassPainterWidget(
-        color: Theme.of(context).colorScheme.primary,
-        heading: _heading,
+        backgroundColor: Colors.grey.shade400,
+        body: Neumorphism(
+          child: CustomPaint(
+            size: size,
+            painter: CompassViewPainter(
+              color: Theme.of(context).colorScheme.primary,
+              heading: _heading,
+            ),
       ),
     ));
   }

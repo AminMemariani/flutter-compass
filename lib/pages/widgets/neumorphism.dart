@@ -4,12 +4,10 @@ class Neumorphism extends StatelessWidget {
   const Neumorphism({
     super.key,
     required this.child,
-    this.distance = 30,
-    this.blur = 50,
+    this.distance = 5,
+    this.blur = 30,
     this.margin,
     this.padding,
-    this.isReverse = false,
-    this.innerShadow = false,
   });
 
   final Widget child;
@@ -17,50 +15,55 @@ class Neumorphism extends StatelessWidget {
   final double blur;
   final EdgeInsetsGeometry? margin;
   final EdgeInsetsGeometry? padding;
-  final bool isReverse;
-  final bool innerShadow;
 
   @override
   Widget build(BuildContext context) {
+    final baseColor = Colors.grey.shade300;
+
     return Container(
       margin: margin,
       padding: padding,
       decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
-          shape: BoxShape.circle,
-          boxShadow: isReverse
-              ? [
-                  BoxShadow(
-                      color: Theme.of(context).colorScheme.primary,
-                      blurRadius: blur,
-                      offset: Offset(-distance, -distance)),
-                  BoxShadow(
-                      color: Colors.white,
-                      blurRadius: blur,
-                      offset: Offset(distance, distance)),
-                ]
-              : [
-                  BoxShadow(
-                      color: Colors.white,
-                      blurRadius: blur,
-                      offset: Offset(distance, distance)),
-                  BoxShadow(
-                      color: Theme.of(context).colorScheme.primary,
-                      blurRadius: blur,
-                      offset: Offset(-distance, -distance)),
-                ]),
-      child: innerShadow
-          ? Container(
+        color: baseColor,
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.white,
+            offset: Offset(-distance, -distance),
+            blurRadius: blur,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.grey.shade500,
+            offset: Offset(distance, distance),
+            blurRadius: blur,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          child,
+          Container(
               decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                    Theme.of(context).colorScheme.primary,
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                center: const Alignment(-0.3, -0.3),
+                radius: 1.0,
+                colors: [
+                  Colors.grey.shade500
+                      .withValues(alpha: 0.35), // top-left inner shadow
+                  Colors.transparent,
                     Colors.white
-                  ])),
-            )
-          : child,
+                      .withValues(alpha: 0.3), // bottom-right inner highlight
+                ],
+                stops: const [0.0, 0.7, 1.0],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
