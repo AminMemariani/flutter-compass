@@ -34,15 +34,18 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
-        backgroundColor: Colors.grey.shade400,
-        body: Neumorphism(
-          child: CustomPaint(
-            size: size,
-            painter: CompassViewPainter(
-              color: Theme.of(context).colorScheme.primary,
-              heading: _heading,
+        backgroundColor: const Color.fromARGB(255, 25, 25, 25),
+        body: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Neumorphism(
+            child: CustomPaint(
+              size: size,
+              painter: CompassViewPainter(
+                color: Theme.of(context).colorScheme.primary,
+                heading: _heading,
+              ),
             ),
-      ),
-    ));
+          ),
+        ));
   }
 }

@@ -43,12 +43,12 @@ class CompassViewPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     final TextStyle degreeStyle = TextStyle(
-      color: color,
+      color: Colors.white,
       fontSize: 12,
     );
 
     final TextStyle cardinalStyle = const TextStyle(
-      color: Colors.black,
+      color: Colors.white,
       fontSize: 20,
       fontWeight: FontWeight.bold,
     );
@@ -112,14 +112,14 @@ class CompassViewPainter extends CustomPainter {
 
     // Draw inner circle for heading
     final innerCirclePaint = Paint()
-      ..color = Colors.amber.shade100
+      ..color = Colors.grey.shade900
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius * 0.3, innerCirclePaint);
 
     // Draw heading text
     if (heading != null) {
       final headingStyle = const TextStyle(
-        color: Colors.black,
+        color: Colors.white,
         fontSize: 24,
         fontWeight: FontWeight.bold,
       );

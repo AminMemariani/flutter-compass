@@ -18,7 +18,7 @@ class Neumorphism extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseColor = Colors.grey.shade300;
+    final baseColor = Colors.grey.shade900;
 
     return Container(
       margin: margin,
@@ -28,13 +28,13 @@ class Neumorphism extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: Colors.white,
+            color: Colors.grey.shade800,
             offset: Offset(-distance, -distance),
             blurRadius: blur,
             spreadRadius: 1,
           ),
           BoxShadow(
-            color: Colors.grey.shade500,
+            color: Colors.black,
             offset: Offset(distance, distance),
             blurRadius: blur,
             spreadRadius: 1,
@@ -52,11 +52,10 @@ class Neumorphism extends StatelessWidget {
                 center: const Alignment(-0.3, -0.3),
                 radius: 1.0,
                 colors: [
-                  Colors.grey.shade500
-                      .withValues(alpha: 0.35), // top-left inner shadow
+                  Colors.black.withValues(alpha: 0.4), // top-left inner shadow
                   Colors.transparent,
-                    Colors.white
-                      .withValues(alpha: 0.3), // bottom-right inner highlight
+                  Colors.grey.shade700
+                      .withValues(alpha: 0.2), // bottom-right inner highlight
                 ],
                 stops: const [0.0, 0.7, 1.0],
               ),
