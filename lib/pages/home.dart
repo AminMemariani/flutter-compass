@@ -35,17 +35,38 @@ class _HomePageState extends State<HomePage> {
     final size = MediaQuery.of(context).size;
     return Scaffold(
         backgroundColor: const Color.fromARGB(255, 25, 25, 25),
-        body: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Neumorphism(
-            child: CustomPaint(
-              size: size,
-              painter: CompassViewPainter(
-                color: Theme.of(context).colorScheme.primary,
-                heading: _heading,
-              ),
-            ),
-          ),
+        body: StreamBuilder<CompassEvent>(
+            stream: FlutterCompass.events,
+            builder: (context, asyncSnapshot) {
+              if (asyncSnapshot.hasError) {
+                return const Text("Error reading heading");
+              } else if (asyncSnapshot.connectionState ==
+                  ConnectionState.waiting) {
+                return Center(
+                  child: const CircularProgressIndicator.adaptive(),
+                );
+              }
+              return Stack(
+                children: [
+                  Neumorphism(
+                    margin: EdgeInsets.all(size.width * 0.1),
+                    child: CustomPaint(
+                      size: size,
+                      painter: CompassViewPainter(
+                        color: Theme.of(context).colorScheme.primary,
+                        heading: _heading,
+                      ),
+                    ),
+                  ),
+                  Neumorphism(
+                    margin: EdgeInsets.all(size.width * 0.4),
+                    distance: 0,
+                    blur: 0,
+                    child: Container(),
+                  ),
+                ],
+              );
+            }
         ));
   }
 }

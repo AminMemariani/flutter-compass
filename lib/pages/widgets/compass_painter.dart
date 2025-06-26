@@ -110,12 +110,6 @@ class CompassViewPainter extends CustomPainter {
       );
     }
 
-    // Draw inner circle for heading
-    final innerCirclePaint = Paint()
-      ..color = Colors.grey.shade900
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius * 0.3, innerCirclePaint);
-
     // Draw heading text
     if (heading != null) {
       final headingStyle = const TextStyle(
