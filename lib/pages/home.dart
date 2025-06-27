@@ -15,22 +15,6 @@ class _HomePageState extends State<HomePage> {
   double? _heading;
 
   @override
-  void initState() {
-    super.initState();
-    FlutterCompass.events?.listen((CompassEvent event) {
-      setState(() {
-        _heading = event.heading;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    FlutterCompass.events!.listen(null);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     return Scaffold(
@@ -46,15 +30,19 @@ class _HomePageState extends State<HomePage> {
                   child: const CircularProgressIndicator.adaptive(),
                 );
               }
+              _heading = asyncSnapshot.data?.heading;
               return Stack(
                 children: [
                   Neumorphism(
                     margin: EdgeInsets.all(size.width * 0.1),
-                    child: CustomPaint(
-                      size: size,
-                      painter: CompassViewPainter(
-                        color: Theme.of(context).colorScheme.primary,
-                        heading: _heading,
+                    child: Transform.rotate(
+                      angle: (_heading! * (90 / 120) * -1),
+                      child: CustomPaint(
+                        size: size,
+                        painter: CompassViewPainter(
+                          color: Theme.of(context).colorScheme.primary,
+                          heading: _heading,
+                        ),
                       ),
                     ),
                   ),
