@@ -124,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                 child: Container(
                   alignment: Alignment.center,
                   child: Text(
-                    "${_headingToDegrees(_heading!).toInt().toString().padLeft(3, '0')}°",
+                    "${_headingToDegrees(_heading!).toInt()}°",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 30,
