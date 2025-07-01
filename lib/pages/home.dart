@@ -60,8 +60,23 @@ class _HomePageState extends State<HomePage> {
           }
           _heading = asyncSnapshot.data?.heading;
           if (_heading == null) {
-            return const Center(
-              child: Text("Device does not have sensors or permission denied"),
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                      "Device does not have sensors or permission denied"),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Permission.locationWhenInUse.request().then((ignored) {
+                        _fetchPermissionStatus();
+                      });
+                    },
+                    child: const Text("Try Again"),
+                  ),
+                ],
+              ),
             );
           }
           return Stack(
