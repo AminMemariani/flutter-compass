@@ -20,8 +20,8 @@ Ensure you have Flutter installed. You can download it from the official [Flutte
 ### Installation
 Clone the repository:
 ```sh
-git clone https://github.com/yourusername/flutter-compass-app.git
-cd flutter-compass-app
+git clone https://github.com/AminMemariani/flutter-compass.git
+cd flutter-compass
 ```
 
 Install dependencies:
@@ -60,5 +60,5 @@ Contributions are welcome! Feel free to submit a pull request.
 This project is licensed under the MIT License. See the `LICENSE` file for details.
 
 ## Contact
-For any queries, contact [your email or GitHub profile].
+For any queries, please consider opening an issue.
 
