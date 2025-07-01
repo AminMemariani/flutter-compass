@@ -59,6 +59,11 @@ class _HomePageState extends State<HomePage> {
             );
           }
           _heading = asyncSnapshot.data?.heading;
+          if (_heading == null) {
+            return const Center(
+              child: Text("Device does not have sensors or permission denied"),
+            );
+          }
           return Stack(
             children: [
               Neumorphism(
