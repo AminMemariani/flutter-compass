@@ -17,13 +17,71 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   /* ────────── state ────────── */
   bool _hasPermission = false;
+  bool _hasMagnetometer = false;
 
   double? _compassHeading; // from magnetometer
   double? _gpsHeading; // from GPS course
   double _gpsSpeed = 0.0; // m/s
+  Position? _currentPosition;
+  final List<Position> _positionHistory =
+      []; // For calculating direction when stationary
+  double _manualNorthOffset = 0.0; // Manual north calibration offset
 
   /* ────────── helpers ────────── */
   double _normalize(double raw) => (raw % 360 + 360) % 360;
+
+  /// Calculate rhumb line bearing between two points
+  double _rhumbBearingDeg(double lat1, double lon1, double lat2, double lon2) {
+    final double lat1Rad = lat1 * math.pi / 180;
+    final double lat2Rad = lat2 * math.pi / 180;
+    final double lon1Rad = lon1 * math.pi / 180;
+    final double lon2Rad = lon2 * math.pi / 180;
+
+    double dLon = lon2Rad - lon1Rad;
+    if (dLon > math.pi) dLon -= 2 * math.pi;
+    if (dLon < -math.pi) dLon += 2 * math.pi;
+
+    final double dPhi = math.log(math.tan(lat2Rad / 2 + math.pi / 4) /
+        math.tan(lat1Rad / 2 + math.pi / 4));
+
+    double bearing = math.atan2(dLon, dPhi) * 180 / math.pi;
+    bearing = (bearing + 360) % 360;
+    return bearing;
+  }
+
+  /// Calculate bearing to North Pole
+  double? _bearingToNorthPole() {
+    if (_currentPosition == null) return null;
+    return _rhumbBearingDeg(
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+      90.0, // North Pole Latitude
+      0.0, // North Pole Longitude
+    );
+  }
+
+  /// Check if magnetometer is available
+  Future<void> _checkMagnetometerAvailability() async {
+    try {
+      final compassEvents = FlutterCompass.events;
+      if (compassEvents == null) {
+        if (mounted) {
+          setState(() => _hasMagnetometer = false);
+        }
+        return;
+      }
+      final compassData = await compassEvents.first.timeout(
+        const Duration(seconds: 2), // Reduced timeout
+      );
+      if (mounted) {
+        setState(() => _hasMagnetometer = compassData.heading != null);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _hasMagnetometer = false);
+      }
+    }
+  }
 
   Future<void> _askForPermission() async {
     // permission_handler
@@ -45,28 +103,35 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _bootstrapPermissions();
+    _checkMagnetometerAvailability();
 
     /* ----- compass sensor (if present) ----- */
-    (FlutterCompass.events ?? const Stream<CompassEvent>.empty())
-        .where((e) => e.heading != null)
-        .distinct((a, b) => (a.heading! - b.heading!).abs() < 1)
-        .listen((e) {
+    FlutterCompass.events?.listen((event) {
       if (mounted) {
-        setState(() => _compassHeading = e.heading);
+        setState(() {
+          _compassHeading = event.heading;
+          _hasMagnetometer = event.heading != null;
+        });
       }
     });
 
-    /* ----- GPS course fallback ----- */
-    final locSettings = const LocationSettings(
-      accuracy: LocationAccuracy.best,
-      distanceFilter: 1, // metres
-    );
-
-    Geolocator.getPositionStream(locationSettings: locSettings).listen((pos) {
+    /* ----- GPS position stream ----- */
+    Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 1, // Update every 1 meter
+      ),
+    ).listen((Position position) {
       if (mounted) {
         setState(() {
-          _gpsHeading = pos.heading.isNaN ? null : pos.heading;
-          _gpsSpeed = pos.speed; // m/s
+          _currentPosition = position;
+          _gpsHeading = position.heading;
+          _gpsSpeed = position.speed;
+          // Keep position history for potential future use
+          _positionHistory.add(position);
+          if (_positionHistory.length > 10) {
+            _positionHistory.removeAt(0);
+          }
         });
       }
     });
@@ -74,12 +139,37 @@ class _HomePageState extends State<HomePage> {
 
   /* ────────── UI helpers ────────── */
   double? get _activeHeading {
-    // 1) prefer magnetometer
-    if (_compassHeading != null) return _compassHeading;
-    // 2) fallback to GPS heading only if moving > 1 m/s (~3.6 km/h)
-    if (_gpsHeading != null && _gpsSpeed > 1.0) return _gpsHeading;
-    // 3) none available
-    return null;
+    // 1) prefer magnetometer if available
+    if (_hasMagnetometer && _compassHeading != null) {
+      return _compassHeading;
+    }
+
+    // 2) if no magnetometer, use GPS heading when moving (speed > 1.0 m/s)
+    if (!_hasMagnetometer && _gpsHeading != null && _gpsSpeed > 1.0) {
+      return _gpsHeading;
+    }
+
+    // 3) if no magnetometer and stationary, calculate bearing to North Pole
+    if (!_hasMagnetometer && _currentPosition != null && _gpsSpeed <= 1.0) {
+      final bearing = _bearingToNorthPole();
+      if (bearing != null) return bearing;
+    }
+
+    // 4) fallback: manual calibration offset
+    return _manualNorthOffset;
+  }
+
+  String get _compassMode {
+    if (_hasMagnetometer && _compassHeading != null) {
+      return 'Magnetometer';
+    }
+    if (!_hasMagnetometer && _gpsHeading != null && _gpsSpeed > 1.0) {
+      return 'GPS Course';
+    }
+    if (!_hasMagnetometer && _currentPosition != null && _gpsSpeed <= 1.0) {
+      return 'Bearing to North';
+    }
+    return 'GPS Mode'; // General GPS fallback
   }
 
   @override
@@ -166,6 +256,76 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
+
+        /* status info ---------------------------------------- */
+        Positioned(
+          top: 50,
+          left: 20,
+          right: 20,
+          child: Neumorphism(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_currentPosition != null) ...[
+                  Text(
+                    'Lat: ${_currentPosition!.latitude.toStringAsFixed(6)}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                  Text(
+                    'Lon: ${_currentPosition!.longitude.toStringAsFixed(6)}',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                  Text(
+                    'Speed: ${(_gpsSpeed * 3.6).toStringAsFixed(1)} km/h',
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+                Text(
+                  'Mode: $_compassMode',
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        /* manual calibration buttons (when no magnetometer) --- */
+        if (!_hasMagnetometer)
+          Positioned(
+            bottom: 50,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _manualNorthOffset = (_manualNorthOffset - 15) % 360;
+                    });
+                  },
+                  child: const Text('← 15°'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _manualNorthOffset = 0.0;
+                    });
+                  },
+                  child: const Text('Reset'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _manualNorthOffset = (_manualNorthOffset + 15) % 360;
+                    });
+                  },
+                  child: const Text('15° →'),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }
@@ -175,12 +335,29 @@ class _HomePageState extends State<HomePage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              _gpsSpeed <= 1
-                  ? 'Stand still → no GPS heading\n(no magnetometer on this device)'
-                  : 'No compass sensor available',
+              _hasMagnetometer
+                  ? 'Waiting for compass data...'
+                  : (_currentPosition != null && _gpsSpeed <= 1.0)
+                      ? 'No magnetometer detected\nShowing bearing to North'
+                      : 'No magnetometer detected\nUsing GPS course when moving',
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white70),
             ),
+            const SizedBox(height: 16),
+            if (_currentPosition != null) ...[
+              Text(
+                'Lat: ${_currentPosition!.latitude.toStringAsFixed(6)}',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              Text(
+                'Lon: ${_currentPosition!.longitude.toStringAsFixed(6)}',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+              Text(
+                'Speed: ${(_gpsSpeed * 3.6).toStringAsFixed(1)} km/h',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ],
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _askForPermission,
